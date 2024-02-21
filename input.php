@@ -59,12 +59,16 @@
 <div class="coloumns mr-6">
     <div class="coloum">
         <div class="class">
-            <header class="card-header title"> 
+        
+            <header class="card-header text-center title "> 
+            <center>
             <?php
-                            echo"<center><h1><font color= grey>Welcome " . $_SESSION['name'] . "</font></h1></center>";
+                            echo"<h1><font color= grey>Welcome " . $_SESSION['name'] . "</font></h1>";
                             
                             ?>
+                            </center>
             </header>
+          
             <div class="card-content">
                 <p >
                     You can share a Google Sheet containing student information (Name, ID, Email)<br>
@@ -80,6 +84,41 @@
                 <button class="button is-success is-outlined ml-4" formaction="">Create Questions and Rubrics</button>
 
             </form>
+
+            
+
+        <div class="card mx-auto" style="width: 35%;">
+        <div class="card border-0">
+            <div class="card-header bg-primary text-center p-4">
+                <h2 class="text-white m-0">Start the Automatic Assessment Process</h2>
+            </div>
+            <div class="card-body rounded-bottom bg-white p-5">
+            <div class="card-body rounded-bottom bg-white p-5">
+              <form action="">
+                <div class="mb-3 row">
+                    <label for="info_url" class="form-label">URL of Information Sheet:</label>
+                    <input type="url" name="info_url" id="info_url" class="form-control" placeholder="info.Gsheet.com" required="required" />
+                </div>
+                <div class="mb-3 row">
+                    <label for="quest_url" class="form-label">URL of Question & Rubrics Sheet:</label>
+                    <input type="url" name="quest_url" id="quest_url" class="form-control" placeholder="question.Gsheet.com" required="required" />
+                </div>
+                <div class="mb-3 row">
+                    <label for="deadline" class="form-label">Submission Deadline:</label>
+                    <input type="date" name="deadline" id="deadline" class="form-control" placeholder="Submission Deadline" required="required" />
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit" value="submit" name="submit">Assess the Students</button>
+                </div>
+
+              </form>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
     </div>
 
 </div>
