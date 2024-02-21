@@ -53,19 +53,38 @@
   </div>
 </nav>
 <nav>
+
+
+<nav>
 <div class="coloumns mr-6">
     <div class="coloum">
         <div class="class">
-            <header class="card-header title"> </header>
-            <div class="card-content">
+            <header class="card-header title"> 
             <?php
-                            echo"<center><h1><font color= black>Welcome " . $_SESSION['name'] . "</font></h1></center>";
+                            echo"<center><h1><font color= grey>Welcome " . $_SESSION['name'] . "</font></h1></center>";
                             
                             ?>
+            </header>
+            <div class="card-content">
+                <p >
+                    You can share a Google Sheet containing student information (Name, ID, Email)<br>
+                    and  Create another Google Sheet containing questions 
+                    and corresponding marking rubrics in a specified format.<br>
+              
+                </p>
             </div>
+            <form action="">
+                
+                <button class="button is-success is-outlined ml-4" formaction="">Share Google Sheet</button>
+                
+                <button class="button is-success is-outlined ml-4" formaction="">Create Questions and Rubrics</button>
+
+            </form>
     </div>
 
 </div>
+</nav>
+
 </nav>
 </body>
 </html>
