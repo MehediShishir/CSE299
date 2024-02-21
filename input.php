@@ -11,6 +11,7 @@
 
             echo "<br>Name: " .$data['name'];
             echo "<br> <img src='".$data['picture']."'>";
+            echo "<br>Email: " .$data['email'];
 
             $_SESSION['name'] = $data['name'];
             $_SESSION['pic'] = $data['picture'];
