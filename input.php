@@ -1,3 +1,4 @@
+<!-- input.php -->
 <?php
     require_once('setup.php');
     if(isset($_GET['code'])){
@@ -41,7 +42,11 @@
 
   <div class="navbar-end">
       <div class="navbar-item">
-        
+          <div class="buttons">
+            <a class="button is-light" href="logout.php">
+              Logout
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -55,6 +60,7 @@
             <div class="card-content">
             <?php
                             echo"<center><h1><font color= black>Welcome " . $_SESSION['name'] . "</font></h1></center>";
+                            
                             ?>
             </div>
     </div>
