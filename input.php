@@ -54,7 +54,7 @@
             <header class="card-header title"> </header>
             <div class="card-content">
             <?php
-                            echo"<h1><font color= black>Welcome " . $_SESSION['name'] . "</font></h1>";
+                            echo"<center><h1><font color= black>Welcome " . $_SESSION['name'] . "</font></h1></center>";
                             ?>
             </div>
     </div>
