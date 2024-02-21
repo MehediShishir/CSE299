@@ -14,8 +14,9 @@
     <div class="container">
         <h1 class="title">Automated Assessment System (AAS)</h1>
             <button type="submit" class="login-button">
-                <a href="<?php echo $google->createAuthUrl()?>">Login with Google</a>
-        </button>
+                <img src="images/google.png" height="20" width="20">
+                <a href="<?php echo $google->createAuthUrl()?>"> Login with Google</a>
+            </button>
     </div>
 </body>
 </html>
