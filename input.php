@@ -81,7 +81,7 @@
                 
                 <button class="button is-success is-outlined ml-4" formaction="">Share Google Sheet</button>
                 
-                <button class="button is-success is-outlined ml-4" formaction="">Create Questions and Rubrics</button>
+              
 
             </form>
 
