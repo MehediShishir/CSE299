@@ -58,7 +58,7 @@
 <nav>
 <div class="coloumns mr-6">
     <div class="coloum">
-        <div class="class">
+        <div class="card mx-auto" style="width: 30%;">
         
             <header class="card-header text-center title "> 
             <center>
@@ -68,7 +68,8 @@
                             ?>
                             </center>
             </header>
-          
+            </div>
+            <center>
             <div class="card-content">
                 <p >
                     You can share a Google Sheet containing student information (Name, ID, Email)<br>
@@ -81,9 +82,9 @@
                 
                 <button class="button is-success is-outlined ml-4" formaction="">Share Google Sheet</button>
                 
-              
-
             </form>
+            </center>
+        
 
             
 
@@ -114,7 +115,7 @@
               </form>
             </div>
             </div>
-        </div>
+        
     </div>
 </div>
 </div>
