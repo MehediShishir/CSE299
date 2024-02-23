@@ -30,7 +30,7 @@
   <div class="navbar-brand">
     <a class="navbar-item" href="https://bulma.io">
       <img src="images/logo.jpg" >
-      <h1 class="title is-size-4 has-text-white">  Automated Assessment System (AAS)</h1>
+      <h1 class="title is-size-4 has-text-white">    Automated Assessment System (AAS)</h1>
     </a>
 
     <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
