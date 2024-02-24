@@ -24,7 +24,7 @@ if(isset($_GET['code'])){
             Google_Service_Drive::DRIVE_FILE,
             'https://www.googleapis.com/auth/forms', // Add the Forms scope manually
         ]);
-        $client->setAuthConfig('credentials.json');
+        $client->setAuthConfig('path_to_your_credentials_file.json');
         $client->setAccessType('offline');
 
         // Authenticate with Google APIs
@@ -37,9 +37,8 @@ if(isset($_GET['code'])){
         $accessToken = json_decode(file_get_contents('path_to_your_access_token.json'), true);
         $client->setAccessToken($accessToken);
 
-
-        // Initialize Google Sheets, Forms, and Drive services
-        $sheetsService = new Google_Service_Sheets($client);
+        // Initialize Google Forms service
+        $formsService = new Google_Service_Forms($client);
         $formsService = new Google_Service_Forms($client);
         $driveService = new Google_Service_Drive($client);
 
