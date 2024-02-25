@@ -78,11 +78,6 @@
               
                 </p>
             </div>
-            <form action="">
-                
-                <button class="button is-success is-outlined ml-4" formaction="">Share Google Sheet</button>
-                
-            </form>
             </center>
         
 
