@@ -24,7 +24,7 @@ if(isset($_GET['code'])){
             Google_Service_Drive::DRIVE_FILE,
             'https://www.googleapis.com/auth/forms', // Add the Forms scope manually
         ]);
-        $client->setAuthConfig('path_to_your_credentials_file.json');
+        $client->setAuthConfig('/credentials_file.json');
         $client->setAccessType('offline');
 
         // Authenticate with Google APIs
