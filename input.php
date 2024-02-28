@@ -1,6 +1,10 @@
 <?php
 require_once('setup.php');
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 if (isset($_GET['code'])) {
     $token = $google->fetchAccessTokenWithAuthCode($_GET['code']);
     if (!isset($token["error"])) {
@@ -11,6 +15,7 @@ if (isset($_GET['code'])) {
         $_SESSION['name'] = $data['name'];
         $_SESSION['pic'] = $data['picture'];
         $_SESSION['email'] = $data['email'];
+        $_SESSION['token_uri'] = 'https://oauth2.googleapis.com/token'; // Save the token URI
     }
 }
 
@@ -102,13 +107,74 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
         $formUrl = "https://docs.google.com/forms/d/e/$form_id/viewform";
         $subject = "Assessment Form for Submission";
         $message = "Please fill out the assessment form by the deadline: $deadline\n$formUrl";
-        // Implement code to send email using PHP's mail function or a mail library
-        // Example using PHP's mail function:
-        // mail($email, $subject, $message);
+
+         // Use the token URI for OAuth 2.0 authentication
+        if (isset($_SESSION['token_uri'])) {
+            $tokenUri = $_SESSION['token_uri'];
+        } else {
+            echo "Error: Token URI not found in session.";
+            exit();
+        }
+
+        // Send email using PHPMailer
+        $mail = new PHPMailer(true);
+
+        try {
+            //Server settings
+            $mail->SMTPDebug = SMTP::DEBUG_OFF;                      // Enable verbose debug output
+            $mail->isSMTP();                                         // Send using SMTP
+
+            // Attempt to discover the SMTP server dynamically
+            $mail->autodiscover();
+
+            //Recipients
+            $mail->setFrom($_SESSION['email'], $_SESSION['name']);
+            $mail->addAddress($email);               // Name is optional
+
+            // Content
+            $mail->isHTML(true);                                  // Set email format to HTML
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+
+
+            // OAuth 2.0 authentication with Gmail
+            $mail->oauth(
+                [
+                    'user' => $_SESSION['email'],
+                    'clientId' => '779111636513-5g4igneqv6q1gkdqqbqf6i87es598baq.apps.googleusercontent.com',
+                    'clientSecret' => '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',
+                    'tokenUri' => $tokenUri,
+                ]
+            );
+
+
+            $mail->send();
+            echo 'Message has been sent';
+        } catch (Exception $e) {
+            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        }
     }
 }
+function getClient()
+{
+    $client = new Google_Client();
+    $client->setApplicationName('Automated Assessment System (AAS)');
+    $client->setScopes([
+        Google_Service_Sheets::SPREADSHEETS,
+        Google_Service_Oauth2::USERINFO_PROFILE,
+        Google_Service_Forms::FORMS,
+        // Add more scopes if needed
+    ]);
 
+    // Set the API key
+    $client->setDeveloperKey('AIzaSyDsxg1tN3iBNwsPG4wTxNOAloouHUK0FEQ');
+
+    // Other configurations as needed
+
+    return $client;
+}
 ?>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
