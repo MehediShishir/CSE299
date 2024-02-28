@@ -1,117 +1,113 @@
-<!-- input.php -->
 <?php
 require_once('setup.php');
 
-if(isset($_GET['code'])){
+if (isset($_GET['code'])) {
     $token = $google->fetchAccessTokenWithAuthCode($_GET['code']);
-    if(!isset($token["error"])){
+    if (!isset($token["error"])) {
         $google->setAccessToken($token['access_token']);
         $service = new Google_Service_Oauth2($google);
 
         $data = $service->userinfo->get();
-        #print_r($data);
         $_SESSION['name'] = $data['name'];
         $_SESSION['pic'] = $data['picture'];
         $_SESSION['email'] = $data['email'];
-
-        // Set up Google API client
-        $client = new Google_Client();
-        $client->setApplicationName('Your Application Name');
-        $client->setScopes([
-            Google_Service_Sheets::SPREADSHEETS_READONLY,
-            Google_Service_Sheets::SPREADSHEETS,
-            Google_Service_Drive::DRIVE_READONLY,
-            Google_Service_Drive::DRIVE_FILE,
-            'https://www.googleapis.com/auth/forms', // Add the Forms scope manually
-        ]);
-        $client->setAuthConfig('/credentials_file.json');
-        $client->setAccessType('offline');
-
-        // Authenticate with Google APIs
-        if ($client->isAccessTokenExpired()) {
-            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            file_put_contents('path_to_your_access_token.json', json_encode($client->getAccessToken()));
-        }
-
-        // Get access token
-        $accessToken = json_decode(file_get_contents('path_to_your_access_token.json'), true);
-        $client->setAccessToken($accessToken);
-
-        // Initialize Google Forms service
-        $formsService = new Google_Service_Forms($client);
-        $formsService = new Google_Service_Forms($client);
-        $driveService = new Google_Service_Drive($client);
-
-        // Ask for user inputs
-        $questionsSheetId = readline("Enter the ID of the Google Sheet containing questions: ");
-        $emailsSheetId = readline("Enter the ID of the Google Sheet containing email accounts: ");
-        $deadline = readline("Enter the deadline for the form (YYYY-MM-DD): ");
-
-        // Define the range for questions and emails
-        $questionsRange = 'Sheet1!A1:D'; // Adjust the range as per your sheet structure
-        $emailsRange = 'Sheet1!A1:B'; // Adjust the range as per your sheet structure
-
-        // Get the values from the Google Sheet containing questions
-        $questionsResponse = $sheetsService->spreadsheets_values->get($questionsSheetId, $questionsRange);
-        $questionsValues = $questionsResponse->getValues();
-
-        // Create a new Google Form
-        $form = new Google_Service_Forms_Form();
-        $form->setTitle('Your Form Title');
-
-        // Add questions to the form
-        foreach ($questionsValues as $row) {
-            $question = new Google_Service_Forms_TextItem();
-            $question->setTitle($row[0]); // Assuming the question is in the first column
-            $form->add($question);
-        }
-
-        // Save the form
-        $form = $formsService->forms->create($form);
-
-        echo '<center><h1>Form created successfully!</h1>';
-        echo '<p>Form ID: ' . $form->getId() . '</p></center>';
-
-        // Get email addresses from the Google Sheet
-        $emailsResponse = $sheetsService->spreadsheets_values->get($emailsSheetId, $emailsRange);
-        $emailsValues = $emailsResponse->getValues();
-
-        // Send the form to email addresses
-        foreach ($emailsValues as $email) {
-            // Send the form link to the email
-            $formLink = "https://docs.google.com/forms/d/{$form->getId()}/viewform";
-            $subject = "Form for Assessment";
-            $message = "Dear user,\n\nHere is the link to the assessment form: $formLink\n\nDeadline: $deadline";
-            mail($email[1], $subject, $message);
-        }
-
-        // Wait for the deadline
-        echo "Form sent to emails. Waiting for the deadline...\n";
-        sleep(10); // You might want to adjust the time based on your needs
-
-        // Get answers from the form
-        $answers = []; // Assume you are storing answers in an array
-        // ... Fetch the answers using Google Forms API or other methods
-
-        // Record answers to a new Google Sheet
-        $answersSheetId = 'your_google_answers_sheet_id';
-        $answersRange = 'Sheet1!A1:D'; // Adjust the range as per your sheet structure
-
-        // Write answers to the Google Sheet
-        $values = [];
-        foreach ($answers as $answer) {
-            $values[] = [$answer];
-        }
-        $body = new Google_Service_Sheets_ValueRange([
-            'values' => $values
-        ]);
-        $params = [
-            'valueInputOption' => 'RAW'
-        ];
-        $result = $sheetsService->spreadsheets_values->append($answersSheetId, $answersRange, $body, $params);
-        printf("%d cells appended.", $result->getUpdates()->getUpdatedCells());
     }
 }
+
+if (isset($_POST['submit'])) {
+    $info_url = $_POST['info_url'];
+    $quest_url = $_POST['quest_url'];
+    $deadline = $_POST['deadline'];
+
+    // Extract data from Google Sheets
+    $info_data = extract_sheet_data($info_url);
+    $quest_data = extract_sheet_data($quest_url);
+
+    // Determine question and email columns
+    $question_column = null;
+    $email_column = null;
+    foreach ($quest_data[0] as $key => $value) {
+        if (stripos($value, 'question') !== false) {
+            $question_column = $key;
+        } elseif (stripos($value, 'email') !== false) {
+            $email_column = $key;
+        }
+    }
+
+    if ($question_column === null || $email_column === null) {
+        echo "Error: Unable to find question or email column.";
+        exit();
+    }
+
+    // Create Google Form
+    $form_id = create_google_form($quest_data, $question_column);
+
+    // Send form to emails
+    send_form_to_emails($info_data, $email_column, $form_id, $deadline);
+
+    echo "Assessment process initiated. Forms will be sent to students.";
+}
+
+function extract_sheet_data($sheet_url)
+{
+    $client = getClient(); // Function to get Google API client
+    $service = new Google_Service_Sheets($client);
+
+    $spreadsheetId = getSpreadsheetIdFromUrl($sheet_url);
+
+    // Get the dimensions of the spreadsheet
+    $response = $service->spreadsheets->get($spreadsheetId);
+    $sheets = $response->getSheets();
+    $sheetProperties = $sheets[0]->getProperties();
+    $gridProperties = $sheetProperties->getGridProperties();
+    $rowCount = $gridProperties->getRowCount();
+    $columnCount = $gridProperties->getColumnCount();
+
+    $range = "A1:{$rowCount}{$columnCount}";
+
+    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+    $values = $response->getValues();
+
+    return $values;
+}
+
+function create_google_form($quest_data, $question_column)
+{
+    $client = getClient(); // Function to get Google API client
+    $service = new Google_Service_Forms($client);
+
+    $form = new Google_Service_Forms_Form();
+    $form->setTitle('Automatically Generated Form');
+
+    // Add questions from the specified column
+    foreach ($quest_data as $row) {
+        $question = new Google_Service_Forms_TextItem();
+        $question->setTitle($row[$question_column]);
+        $form->add($question);
+    }
+
+    // Create the form
+    $createdForm = $service->forms->create($form);
+
+    return $createdForm->getId();
+}
+
+function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
+{
+    $client = getClient(); // Function to get Google API client
+    $service = new Google_Service_Forms($client);
+
+    foreach ($info_data as $row) {
+        $email = $row[$email_column];
+        $formUrl = "https://docs.google.com/forms/d/e/$form_id/viewform";
+        $subject = "Assessment Form for Submission";
+        $message = "Please fill out the assessment form by the deadline: $deadline\n$formUrl";
+        // Implement code to send email using PHP's mail function or a mail library
+        // Example using PHP's mail function:
+        // mail($email, $subject, $message);
+    }
+}
+
 ?>
 <html lang="en">
 <head>
