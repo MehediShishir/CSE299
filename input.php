@@ -4,6 +4,7 @@ require_once('setup.php');
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\OAuth;
 
 if (isset($_GET['code'])) {
     $token = $google->fetchAccessTokenWithAuthCode($_GET['code']);
@@ -20,37 +21,65 @@ if (isset($_GET['code'])) {
 }
 
 if (isset($_POST['submit'])) {
-    $info_url = $_POST['info_url'];
-    $quest_url = $_POST['quest_url'];
-    $deadline = $_POST['deadline'];
+    try {
+        $info_url = $_POST['info_url'];
+        $quest_url = $_POST['quest_url'];
+        $deadline = $_POST['deadline'];
 
-    // Extract data from Google Sheets
-    $info_data = extract_sheet_data($info_url);
-    $quest_data = extract_sheet_data($quest_url);
-
-    // Determine question and email columns
-    $question_column = null;
-    $email_column = null;
-    foreach ($quest_data[0] as $key => $value) {
-        if (stripos($value, 'question') !== false) {
-            $question_column = $key;
-        } elseif (stripos($value, 'email') !== false) {
-            $email_column = $key;
+        // Extract data from Google Sheets
+        if (!isValidSheetUrl($info_url) || !isValidSheetUrl($quest_url)) {
+            throw new Exception("Invalid Google Sheets URL");
         }
+
+        try {
+            $info_data = extract_sheet_data($info_url);
+            $quest_data = extract_sheet_data($quest_url);
+        } catch (Exception $e) {
+            echo "Error: " . $e->getMessage();
+            exit();
+        }
+        
+        // Determine question and email columns
+        $question_column = null;
+        $email_column = null;
+        foreach ($quest_data[0] as $key => $value) {
+            if (stripos($value, 'question') !== false) {
+                $question_column = $key;
+            } elseif (stripos($value, 'email') !== false) {
+                $email_column = $key;
+            }
+        }
+
+        if ($question_column === null || $email_column === null) {
+            echo "Error: Unable to find question or email column.";
+            exit();
+        }
+
+        // Create Google Form
+        $form_id = create_google_form($quest_data, $question_column);
+
+        // Send form to emails
+        send_form_to_emails($info_data, $email_column, $form_id, $deadline);
+
+        echo "Assessment process initiated. Forms will be sent to students.";
+    } catch (Google\Service\Exception $e) {
+        // Handle the exception
+        echo "Error fetching spreadsheet data: " . $e->getMessage();
+        // You can log the error or perform other actions as needed
     }
+}
 
-    if ($question_column === null || $email_column === null) {
-        echo "Error: Unable to find question or email column.";
-        exit();
-    }
 
-    // Create Google Form
-    $form_id = create_google_form($quest_data, $question_column);
+function getSpreadsheetIdFromUrl($url) {
+    // Extract the spreadsheet ID from the URL
+    $parts = explode('/', $url);
+    $spreadsheetId = end($parts);
+    return $spreadsheetId;
+}
 
-    // Send form to emails
-    send_form_to_emails($info_data, $email_column, $form_id, $deadline);
-
-    echo "Assessment process initiated. Forms will be sent to students.";
+// Function to validate Google Sheets URL
+function isValidSheetUrl($url) {
+    return preg_match('/^https:\/\/docs.google.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)\/edit/', $url);
 }
 
 function extract_sheet_data($sheet_url)
@@ -60,20 +89,31 @@ function extract_sheet_data($sheet_url)
 
     $spreadsheetId = getSpreadsheetIdFromUrl($sheet_url);
 
-    // Get the dimensions of the spreadsheet
-    $response = $service->spreadsheets->get($spreadsheetId);
-    $sheets = $response->getSheets();
-    $sheetProperties = $sheets[0]->getProperties();
-    $gridProperties = $sheetProperties->getGridProperties();
-    $rowCount = $gridProperties->getRowCount();
-    $columnCount = $gridProperties->getColumnCount();
+    try {
+        // Get the dimensions of the spreadsheet
+        $response = $service->spreadsheets->get($spreadsheetId);
+        $sheets = $response->getSheets();
+        $sheetProperties = $sheets[0]->getProperties();
+        $gridProperties = $sheetProperties->getGridProperties();
+        $rowCount = $gridProperties->getRowCount();
+        $columnCount = $gridProperties->getColumnCount();
 
-    $range = "A1:{$rowCount}{$columnCount}";
+        $range = "A1:{$rowCount}{$columnCount}";
 
-    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-    $values = $response->getValues();
+        $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+        $values = $response->getValues();
 
-    return $values;
+        if (empty($values)) {
+            throw new Exception("No data found in the spreadsheet");
+        }
+
+        return $values;
+    } catch (Google\Service\Exception $e) {
+        // Log the error for debugging purposes
+        error_log('Error fetching spreadsheet data: ' . $e->getMessage());
+        // Return a specific error message
+        throw new Exception("Error fetching spreadsheet data: " . $e->getMessage());
+    }
 }
 
 function create_google_form($quest_data, $question_column)
@@ -100,7 +140,7 @@ function create_google_form($quest_data, $question_column)
 function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
 {
     $client = getClient(); // Function to get Google API client
-    $service = new Google_Service_Forms($client);
+    $service = new Google_Service_Gmail($client); // Change to Gmail service
 
     foreach ($info_data as $row) {
         $email = $row[$email_column];
@@ -108,7 +148,7 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
         $subject = "Assessment Form for Submission";
         $message = "Please fill out the assessment form by the deadline: $deadline\n$formUrl";
 
-         // Use the token URI for OAuth 2.0 authentication
+        // Use the token URI for OAuth 2.0 authentication
         if (isset($_SESSION['token_uri'])) {
             $tokenUri = $_SESSION['token_uri'];
         } else {
@@ -121,12 +161,15 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
 
         try {
             //Server settings
+            $mail->SMTPDebug = SMTP::DEBUG_SERVER;
             $mail->SMTPDebug = SMTP::DEBUG_OFF;                      // Enable verbose debug output
             $mail->isSMTP();                                         // Send using SMTP
-
-            // Attempt to discover the SMTP server dynamically
-            $mail->autodiscover();
-
+            $mail->Host       = 'smtp.gmail.com';                    // Default SMTP server to send through
+            $mail->SMTPAuth   = true;                                // Enable SMTP authentication
+            $mail->Username   = $_SESSION['email'];                  // SMTP username
+            $mail->Password   = '';                                  // SMTP password - leave blank for OAuth
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;      // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
+            $mail->Port       = 587;                                 // TCP port to connect to, use 465 for `PHPMailer::ENCRYPTION_SMTPS` above
             //Recipients
             $mail->setFrom($_SESSION['email'], $_SESSION['name']);
             $mail->addAddress($email);               // Name is optional
@@ -135,7 +178,6 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
             $mail->isHTML(true);                                  // Set email format to HTML
             $mail->Subject = $subject;
             $mail->Body    = $message;
-
 
             // OAuth 2.0 authentication with Gmail
             $mail->oauth(
@@ -147,6 +189,8 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
                 ]
             );
 
+            // Update PHPMailer SMTPDebug
+            $mail->SMTPDebug = SMTP::DEBUG_SERVER;
 
             $mail->send();
             echo 'Message has been sent';
@@ -155,14 +199,16 @@ function send_form_to_emails($info_data, $email_column, $form_id, $deadline)
         }
     }
 }
+
 function getClient()
 {
     $client = new Google_Client();
     $client->setApplicationName('Automated Assessment System (AAS)');
     $client->setScopes([
-        Google_Service_Sheets::SPREADSHEETS,
+        Google_Service_Sheets::SPREADSHEETS_READONLY, // Use SPREADSHEETS_READONLY scope
         Google_Service_Oauth2::USERINFO_PROFILE,
-        Google_Service_Forms::FORMS,
+        Google_Service_Gmail::GMAIL_SEND,
+        Google_Service_Drive::DRIVE,
         // Add more scopes if needed
     ]);
 
@@ -173,7 +219,9 @@ function getClient()
 
     return $client;
 }
+
 ?>
+
 
 <html lang="en">
 <head>
@@ -249,7 +297,7 @@ function getClient()
             </div>
             <div class="card-body rounded-bottom bg-white p-5">
             <div class="card-body rounded-bottom bg-white p-5">
-              <form action="">
+              <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                 <div class="mb-3 row">
                     <label for="info_url" class="form-label">URL of Information Sheet:</label>
                     <input type="url" name="info_url" id="info_url" class="form-control" placeholder="info.Gsheet.com" required="required" />

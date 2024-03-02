@@ -1,150 +1,118 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Sheets API Quickstart</title>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <p>Sheets API Quickstart</p>
-
-    <!--Add buttons to initiate auth sequence and sign out-->
-    <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
-    <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
-
-    <pre id="content" style="white-space: pre-wrap;"></pre>
-
-    <script type="text/javascript">
-      /* exported gapiLoaded */
-      /* exported gisLoaded */
-      /* exported handleAuthClick */
-      /* exported handleSignoutClick */
-
-      // TODO(developer): Set to client ID and API key from the Developer Console
-      const CLIENT_ID = '<YOUR_CLIENT_ID>';
-      const API_KEY = '<YOUR_API_KEY>';
-
-      // Discovery doc URL for APIs used by the quickstart
-      const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
-
-      // Authorization scopes required by the API; multiple scopes can be
-      // included, separated by spaces.
-      const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
-
-      let tokenClient;
-      let gapiInited = false;
-      let gisInited = false;
-
-      document.getElementById('authorize_button').style.visibility = 'hidden';
-      document.getElementById('signout_button').style.visibility = 'hidden';
-
-      /**
-       * Callback after api.js is loaded.
-       */
-      function gapiLoaded() {
-        gapi.load('client', initializeGapiClient);
-      }
-
-      /**
-       * Callback after the API client is loaded. Loads the
-       * discovery doc to initialize the API.
-       */
-      async function initializeGapiClient() {
-        await gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: [DISCOVERY_DOC],
-        });
-        gapiInited = true;
-        maybeEnableButtons();
-      }
-
-      /**
-       * Callback after Google Identity Services are loaded.
-       */
-      function gisLoaded() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          scope: SCOPES,
-          callback: '', // defined later
-        });
-        gisInited = true;
-        maybeEnableButtons();
-      }
-
-      /**
-       * Enables user interaction after all libraries are loaded.
-       */
-      function maybeEnableButtons() {
-        if (gapiInited && gisInited) {
-          document.getElementById('authorize_button').style.visibility = 'visible';
-        }
-      }
-
-      /**
-       *  Sign in the user upon button click.
-       */
-      function handleAuthClick() {
-        tokenClient.callback = async (resp) => {
-          if (resp.error !== undefined) {
-            throw (resp);
-          }
-          document.getElementById('signout_button').style.visibility = 'visible';
-          document.getElementById('authorize_button').innerText = 'Refresh';
-          await listMajors();
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AAS</title>
+</head>
+<body>
+<nav class="navbar has-background-primary-dark" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://bulma.io">
+      <img src="images/logo.jpg" >
+      <h1 class="title is-size-4 has-text-white">Automated Assessment System (AAS)</h1>
+    </a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-end">
+    <div class="navbar-item">
+      <div class="buttons">
+        <a class="button is-light" href="logout.php">Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="columns mr-6">
+    <div class="column">
+        <div class="card mx-auto" style="width: 30%;">
+            <header class="card-header text-center title"> 
+            <center>
+            <h1><font color="grey">Welcome <span id="username"></span></font></h1>
+            </center>
+            </header>
+            <center>
+            <div class="card-content">
+                <p>You can share a Google Sheet containing student information (Name, ID, Email) and create another Google Sheet containing questions and corresponding marking rubrics in a specified format.</p>
+            </div>
+            </center>
+        </div>
+        <div class="card mx-auto" style="width: 35%;">
+        <div class="card border-0">
+            <div class="card-header bg-primary text-center p-4">
+                <h2 class="text-white m-0">Start the Automatic Assessment Process</h2>
+            </div>
+            <div class="card-body rounded-bottom bg-white p-5">
+              <form id="assessmentForm">
+                <div class="mb-3 row">
+                    <label for="info_url" class="form-label">URL of Information Sheet:</label>
+                    <input type="url" name="info_url" id="info_url" class="form-control" placeholder="info.Gsheet.com" required />
+                </div>
+                <div class="mb-3 row">
+                    <label for="quest_url" class="form-label">URL of Question & Rubrics Sheet:</label>
+                    <input type="url" name="quest_url" id="quest_url" class="form-control" placeholder="question.Gsheet.com" required />
+                </div>
+                <div class="mb-3 row">
+                    <label for="deadline" class="form-label">Submission Deadline:</label>
+                    <input type="date" name="deadline" id="deadline" class="form-control" required />
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit" id="submitBtn">Assess the Students</button>
+                </div>
+              </form>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+$(document).ready(function() {
+    $('#assessmentForm').submit(function(event) {
+        event.preventDefault();
+        var info_url = $('#info_url').val();
+        var quest_url = $('#quest_url').val();
+        var deadline = $('#deadline').val();
+        var requestData = {
+            info_url: info_url,
+            quest_url: quest_url,
+            deadline: deadline
         };
+        $.ajax({
+            type: 'POST',
+            url: 'process_data.php', // Specify the URL for processing data
+            data: requestData,
+            success: function(response) {
+                console.log(response); // Log the response
+                alert(response); // Show an alert with the response
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText); // Log the error message
+                alert("Error: " + xhr.responseText); // Show an alert with the error message
+            }
+        });
+    });
 
-        if (gapi.client.getToken() === null) {
-          // Prompt the user to select a Google Account and ask for consent to share their data
-          // when establishing a new session.
-          tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-          // Skip display of account chooser and consent dialog for an existing session.
-          tokenClient.requestAccessToken({prompt: ''});
-        }
-      }
+    // Function to initialize Google API client
+    function initClient() {
+        gapi.client.init({
+            'apiKey': 'AIzaSyDsxg1tN3iBNwsPG4wTxNOAloouHUK0FEQ', // Replace with your API key
+            'clientId': '779111636513-5g4igneqv6q1gkdqqbqf6i87es598baq.apps.googleusercontent.com', // Replace with your OAuth 2.0 client ID
+            'scope': 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/forms https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile',
+            'discoveryDocs': ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/forms/v1/rest', 'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest']
+        }).then(function() {
+            console.log('Google API client initialized');
+        });
+    }
 
-      /**
-       *  Sign out the user upon button click.
-       */
-      function handleSignoutClick() {
-        const token = gapi.client.getToken();
-        if (token !== null) {
-          google.accounts.oauth2.revoke(token.access_token);
-          gapi.client.setToken('');
-          document.getElementById('content').innerText = '';
-          document.getElementById('authorize_button').innerText = 'Authorize';
-          document.getElementById('signout_button').style.visibility = 'hidden';
-        }
-      }
-
-      /**
-       * Print the names and majors of students in a sample spreadsheet:
-       * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-       */
-      async function listMajors() {
-        let response;
-        try {
-          // Fetch first 10 files
-          response = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-            range: 'Class Data!A2:E',
-          });
-        } catch (err) {
-          document.getElementById('content').innerText = err.message;
-          return;
-        }
-        const range = response.result;
-        if (!range || !range.values || range.values.length == 0) {
-          document.getElementById('content').innerText = 'No values found.';
-          return;
-        }
-        // Flatten to string to display
-        const output = range.values.reduce(
-            (str, row) => `${str}${row[0]}, ${row[4]}\n`,
-            'Name, Major:\n');
-        document.getElementById('content').innerText = output;
-      }
-    </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-  </body>
+    // Load Google API client
+    gapi.load('client', initClient);
+});
+</script>
+</body>
 </html>
