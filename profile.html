@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>User Profile</title>
+</head>
+<body>
+    <nav class="navbar has-background-primary-dark" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://bulma.io">
+                <img src="images/logo.jpg">
+                <h1 class="title is-size-4 has-text-white">Automated Assessment System (AAS)</h1>
+            </a>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    <a class="button is-light" href="logout.php">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="columns">
+            <div class="column">
+                <div class="card">
+                    <header class="card-header text-center title">
+                        <h1><font color="grey" id="welcomeMessage"></font></h1>
+                    </header>
+                    <div class="card-content">
+                        <p>
+                            You can share a Google Sheet containing student information (Name, ID, Email)
+                            and create another Google Sheet containing questions and corresponding marking rubrics in a specified format.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="card border-0">
+                    <div class="card-header bg-primary text-center p-4">
+                        <h2 class="text-white m-0">Start the Automatic Assessment Process</h2>
+                    </div>
+                    <div class="card-body rounded-bottom bg-white p-5">
+                        <form id="assessmentForm">
+                            <div class="mb-3 row">
+                                <label for="info_url" class="form-label">URL of Information Sheet:</label>
+                                <input type="url" name="info_url" id="info_url" class="form-control" placeholder="info.Gsheet.com" required />
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="quest_url" class="form-label">URL of Question & Rubrics Sheet:</label>
+                                <input type="url" name="quest_url" id="quest_url" class="form-control" placeholder="question.Gsheet.com" required />
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="deadline" class="form-label">Submission Deadline:</label>
+                                <input type="date" name="deadline" id="deadline" class="form-control" placeholder="Submission Deadline" required />
+                            </div>
+                            <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit">Assess the Students</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get user information from localStorage
+        
+        var userName = localStorage.getItem('name');
+
+        // Display user information
+        if (userName) {
+            document.getElementById('welcomeMessage').textContent = "Welcome " + userName;
+        } else {
+            document.getElementById('welcomeMessage').textContent = "Welcome";
+        }
+
+        // Function to handle form submission
+        document.getElementById('assessmentForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+            
+            // Get values from input fields
+            var infoUrl = document.getElementById('info_url').value;
+            var questUrl = document.getElementById('quest_url').value;
+            var deadline = document.getElementById('deadline').value;
+
+            // Log values to console (you can perform further actions here)
+            console.log('Information Sheet URL:', infoUrl);
+            console.log('Question & Rubrics Sheet URL:', questUrl);
+            console.log('Submission Deadline:', deadline);
+        });
+    </script>
+</body>
+</html>
