@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 require_once('setup.php');
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -329,4 +329,4 @@ function getClient()
 
 </nav>
 </body>
-</html>
+</html> -->
