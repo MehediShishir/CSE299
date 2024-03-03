@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>AAS</title>
+</head>
+<body>
+    <nav class="navbar has-background-primary-dark" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://bulma.io">
+                <img src="images/logo.jpg">
+                <h1 class="title is-size-4 has-text-white">Automated Assessment System (AAS)</h1>
+            </a>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    <button onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="title">Welcome to Your Profile</h1>
+        <div id="user-info"></div>
+
+        <div class="field">
+            <label class="label">Student Sheet URL</label>
+            <div class="control">
+                <input class="input" type="text" id="studentSheetUrl" placeholder="Enter student sheet URL">
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Question Sheet URL</label>
+            <div class="control">
+                <input class="input" type="text" id="questionSheetUrl" placeholder="Enter question sheet URL">
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Deadline</label>
+            <div class="control">
+                <input class="input" type="datetime-local" id="deadlineDate">
+            </div>
+        </div>
+
+        <button class="button is-primary" onclick="continueClicked()">Continue</button>
+    </div>
+
+    <script>
+        // Retrieve user data from localStorage
+        var userData = JSON.parse(localStorage.getItem("userData"));
+
+        // Display user information
+        if (userData) {
+            document.getElementById("user-info").innerHTML = `
+                <p>Name: ${userData.name}</p>
+                <p>Email: ${userData.email}</p>
+                <!-- Add more fields as needed -->
+            `;
+        } else {
+            // Handle case where user data is not available
+            document.getElementById("user-info").innerHTML = "<p>User data not available.</p>";
+        }
+
+        // Function to handle logout
+        function logout() {
+            // Clear user data from localStorage
+            localStorage.removeItem("userData");
+            // Redirect to the login page (assuming it's named index.html)
+            window.location.href = "index2.html";
+        }
+
+        // Function to handle continue button click
+        function continueClicked() {
+            // Get values from input fields
+            var studentSheetUrl = document.getElementById("studentSheetUrl").value;
+            var questionSheetUrl = document.getElementById("questionSheetUrl").value;
+            var deadlineDate = document.getElementById("deadlineDate").value;
+
+            // Check if fields are non-empty
+            if (studentSheetUrl && questionSheetUrl && deadlineDate) {
+                // Log values to console
+                console.log("Student Sheet URL:", studentSheetUrl);
+                console.log("Question Sheet URL:", questionSheetUrl);
+                console.log("Deadline Date:", deadlineDate);
+
+                google.script.run.createFormAndSendEmail(questionSheetUrl, studentSheetUrl, deadlineDate);
+                //window.location.href = "formSubmitted.html";
+                alert("Form has been Sent Successfully");
+                console.log("Email Sent!");
+
+
+                // You can perform further actions here, such as saving data to variables or sending it to the server via AJAX
+            } else {
+                alert("Please fill in all fields.");
+            }
+        }
+    </script>
+</body>
+</html>
