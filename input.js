@@ -1,32 +1,3 @@
-// const express = require('express');
-// const path = require('path');
-// const app = express();
-
-// // Middleware to parse incoming request bodies
-// app.use(express.urlencoded({ extended: true }));
-
-// // Serve the static files from the current directory
-// app.use(express.static(__dirname));
-
-// // OAuth route for Google authentication
-// app.get('/auth/google', (req, res) => {
-//     // Assuming you have logic here to initiate Google OAuth authentication
-//     // After successful authentication, redirect user to the provided link
-//     res.redirect('https://script.google.com/macros/s/AKfycbx5N6J-MO4ctASuZUk87ucecUHdShU8Pb5BPRqsgmncXDDbf_m6B-WceLbrvW7gBjdu/exec');
-// });
-
-// // Route for serving login.html directly when the root URL is accessed
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'login.html'));
-// });
-
-// // Start the server
-// const port = process.env.PORT || 3000;
-// app.listen(port, () => {
-//     console.log(`Server is running on port ${port}`);
-// });
-
-
 
 const express = require('express');
 const passport = require('passport');
