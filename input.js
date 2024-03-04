@@ -60,7 +60,8 @@ app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
         // Redirect user to the provided link after successful authentication
-        res.redirect('https://script.google.com/macros/s/AKfycbx5N6J-MO4ctASuZUk87ucecUHdShU8Pb5BPRqsgmncXDDbf_m6B-WceLbrvW7gBjdu/exec');
+        // res.redirect('https://script.google.com/macros/s/AKfycbx5N6J-MO4ctASuZUk87ucecUHdShU8Pb5BPRqsgmncXDDbf_m6B-WceLbrvW7gBjdu/exec');
+        res.redirect('https://script.google.com/macros/s/AKfycbykcxDm0sMiDtLtsnCYfJ-yAGa0zsadAgpbuqp5Dkvfb22FrQpVqtU6sl25Xq-XaQrV/exec');
     }
 );
 
