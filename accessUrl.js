@@ -9,7 +9,7 @@ function createFormAndSendEmail(qUrl, sUrl, deadline) {
   var studentsSheet = ssStudents.getSheetByName("Sheet1");
 
   // Create a new Google Form 
-  var form = FormApp.create('Project299');
+  var form = FormApp.create('Project_299');
 
   // Retrieve questions from the sheet starting from cell A2 and add them to the form as short answer questions
   var lastRow = questionsSheet.getLastRow();
