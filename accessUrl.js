@@ -8,7 +8,7 @@ function createFormAndSendEmail(qUrl, sUrl, deadline) {
   var questionsSheet = ssQuestions.getSheetByName("Sheet1");
   var studentsSheet = ssStudents.getSheetByName("Sheet1");
 
-  // Create a new Google Form 
+  // Create a new Google Form
   var form = FormApp.create('Project299');
 
   // Retrieve questions from the sheet starting from cell A2 and add them to the form as short answer questions
@@ -96,7 +96,7 @@ function onFormSubmit(e, formUrlGlobal) {
     // Send email to the script owner with the spreadsheet URL
     var scriptOwnerEmail = Session.getActiveUser().getEmail();
     var subject = 'New Response Spreadsheet Created';
-    var message = 'Hello,\n\nA new response spreadsheet has been created. Here is the link: ' + responseSpreadsheetUrl;
+    var message = 'Hello,\n\nA new response spreadsheet has been created: ' + responseSpreadsheetUrl;
     MailApp.sendEmail(scriptOwnerEmail, subject, message);
   }
 }
