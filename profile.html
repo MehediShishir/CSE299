@@ -91,7 +91,7 @@
                 console.log("Question Sheet URL:", questionSheetUrl);
                 console.log("Deadline Date:", deadlineDate);
 
-                google.script.run.createFormAndSendEmail(questionSheetUrl, studentSheetUrl, deadlineDate);
+                google.script.run.createAndSendFormWithDeadline(questionSheetUrl, studentSheetUrl, deadlineDate);
                 //window.location.href = "formSubmitted.html";
                 alert("Form has been Sent Successfully");
                 console.log("Email Sent!");
