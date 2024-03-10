@@ -45,6 +45,7 @@ function closeForm() {
 
 // Function to handle form submission event
 function onFormSubmit(e) {
+  Logger.log('Event Object: ' + JSON.stringify(e));
   var formResponses = e.values; // Retrieve all form responses
   
   // Create a new spreadsheet to store responses
